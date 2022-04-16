@@ -8,6 +8,7 @@ using Calendar.Controllers;
 using System.Linq.Expressions;
 using System.Net.Mail;
 using System.Net;
+using System.Threading;
 
 namespace Calendar.BusinessLayer
 {
@@ -45,6 +46,12 @@ namespace Calendar.BusinessLayer
         public async Task<CalendarRespModel> CreateCalendar(CreateCalendarRequestModel reqModel)
         {
             var respModel = new CalendarRespModel();
+            if (!checkValidFromTime(reqModel.FromDateTime))
+            {
+                respModel.RespCode = Messages._024.Key;
+                respModel.RespDescription = Messages._024.Value;
+                return respModel;
+            }
             if (!checkCorrectDateRange(reqModel.FromDateTime, reqModel.ToDateTime))
             {
                 respModel.RespCode = Messages._023.Key;
@@ -68,7 +75,9 @@ namespace Calendar.BusinessLayer
                 await dbContext.SaveChangesAsync();
                 respModel.RespCode = Messages._000.Key;
                 respModel.RespDescription = Messages._000.Value;
-                SendEmail(calendar);
+                //SendEmail(calendar);
+                var tomail = dbContext.tbUsers.Where(a => a.ID == reqModel.UserID).FirstOrDefault().Email;
+                new Thread(() => SendEmail(calendar,tomail)).Start();
             }
             else
             {
@@ -89,6 +98,7 @@ namespace Calendar.BusinessLayer
             {
                 respModel.RespCode = Messages._006.Key;
                 respModel.RespDescription = Messages._006.Value;
+                return respModel;
             }
             else
             {
@@ -96,7 +106,10 @@ namespace Calendar.BusinessLayer
                 respModel.RespCode = Messages._000.Key;
                 respModel.RespDescription = Messages._000.Value;
             }
+            existing = preparingCancellationSchedule(existing);
+            var tomail = dbContext.tbUsers.Where(a => a.ID == existing.UserID).FirstOrDefault().Email;
             dbContext.SaveChanges();
+            new Thread(()=>SendEmail(existing,tomail)).Start();
             return respModel;
         }
 
@@ -104,6 +117,12 @@ namespace Calendar.BusinessLayer
         {
             var respModel = new CalendarRespModel();
             var existing = getCalendar(reqModel.ID, reqModel.UserID);
+            if (!checkValidFromTime(reqModel.FromDateTime))
+            {
+                respModel.RespCode = Messages._024.Key;
+                respModel.RespDescription = Messages._024.Value;
+                return respModel;
+            }
             if (!checkCorrectDateRange(reqModel.FromDateTime, reqModel.ToDateTime))
             {
                 respModel.RespCode = Messages._023.Key;
@@ -114,6 +133,7 @@ namespace Calendar.BusinessLayer
             {
                 respModel.RespCode = Messages._006.Key;
                 respModel.RespDescription = Messages._006.Value;
+                return respModel;
             }
             else
             {
@@ -159,7 +179,10 @@ namespace Calendar.BusinessLayer
             }
             return respModel;
         }
-
+        private bool checkValidFromTime(DateTime from)
+        {
+            return from >= DateTime.Now?true:false;
+        }
         private bool checkCorrectDateRange(DateTime from, DateTime to)
         {
             return from >= to ? false : true;
@@ -169,9 +192,9 @@ namespace Calendar.BusinessLayer
             Expression<Func<tbCalendar, bool>> calendar = x => true;
             if (ID > 0)
             {
-                calendar = x => x.ID != ID;
+                calendar = x => x.ID != ID; 
             }
-            var resp = dbContext.tbCalendars.Where(a => a.UserID==userID && ((from < a.FromDatetime && to > a.FromDatetime)
+            var resp = dbContext.tbCalendars.Where(a => a.UserID==userID && a.FromDatetime>=from.Date && ((from < a.FromDatetime && to > a.FromDatetime)
                             || (from < a.ToDatetime && to > a.ToDatetime)
                             || (a.FromDatetime < from && a.ToDatetime > to)
                             || (a.FromDatetime > from && a.ToDatetime < to))
@@ -185,7 +208,14 @@ namespace Calendar.BusinessLayer
             return dbContext.tbCalendars.Where(a => a.ID == ID && a.UserID == userID).FirstOrDefault();
         }
 
-        private void SendEmail(tbCalendar reqModel)
+        private tbCalendar preparingCancellationSchedule(tbCalendar reqModel)
+        {
+            reqModel.Title="Cancellation of "+reqModel.Title;
+            reqModel.Description = $"We are sorry to notify you that the event {reqModel.Title} at {reqModel.FromDatetime.ToString("MMMM dd, yyyy HH:mm")} has been cancelled";
+            return reqModel;
+        }
+
+        private void SendEmail(tbCalendar reqModel,string tomail)
         {
             try
             {
@@ -193,7 +223,7 @@ namespace Calendar.BusinessLayer
                 SmtpClient smtp = new SmtpClient();
                 message.From = new MailAddress("calendartt381@gmail.com");
                 var mailList = reqModel.Guest.Split(',');
-                message.To.Add(dbContext.tbUsers.Where(a=>a.ID==reqModel.UserID).FirstOrDefault().Email);
+                message.To.Add(tomail);
                 for (int i = 0; i < mailList.Length; i++)
                 {
                     message.CC.Add(new MailAddress(mailList[i]));

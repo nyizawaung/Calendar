@@ -48,11 +48,10 @@ namespace Calendar.Model
     {
         [Required]
         public int UserID { get; set; }
-        [Required]
+     
         public string Guest { get; set; }
         [Required]
         public string Title { get; set; }
-        [Required]
         public string Description { get; set; }
         [Required]
         public DateTime FromDateTime { get; set; }
@@ -65,11 +64,10 @@ namespace Calendar.Model
         public int ID { get; set; }
         [Required]
         public int UserID { get; set; }
-        [Required]
+     
         public string Guest { get; set; }
         [Required]
         public string Title { get; set; }
-        [Required]
         public string Description { get; set; }
         [Required]
         public DateTime FromDateTime { get; set; }

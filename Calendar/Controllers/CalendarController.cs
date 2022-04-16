@@ -22,6 +22,7 @@ namespace Calendar.Controllers
         public static KeyValuePair<string, string> _019 = new KeyValuePair<string, string>("119", "Something Went Wrong. Please try again later.");
         public static KeyValuePair<string, string> _021 = new KeyValuePair<string, string>("021", "There is conflict time frame with {title} between {from} and {to}.\n Please try considering to move the existing schedule or change the new schedule time frame");
         public static KeyValuePair<string, string> _023 = new KeyValuePair<string, string>("023", "FromDateTime cannot be equal or greater than ToDateTime");
+        public static KeyValuePair<string, string> _024 = new KeyValuePair<string, string>("024", "FromDateTime cannot less than current time");
         public static KeyValuePair<string, string> _006 = new KeyValuePair<string, string>("006", "Sorry, the schedule does not exist.");
     }
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
