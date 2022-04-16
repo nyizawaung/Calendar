@@ -195,10 +195,10 @@ namespace Calendar.BusinessLayer
             {
                 calendar = x => x.ID != ID; 
             }
-            var resp = dbContext.tbCalendars.Where(a => a.UserID==userID && a.FromDatetime>=from.Date && ((from < a.FromDatetime && to > a.FromDatetime)
+            var resp = dbContext.tbCalendars.Where(a => a.UserID==userID && a.FromDatetime>=from.Date && ((from <= a.FromDatetime && to > a.FromDatetime)
                             || (from < a.ToDatetime && to > a.ToDatetime)
-                            || (a.FromDatetime < from && a.ToDatetime > to)
-                            || (a.FromDatetime > from && a.ToDatetime < to))
+                            || (a.FromDatetime <= from && a.ToDatetime > to)
+                            || (a.FromDatetime >= from && a.ToDatetime < to))
                             ).Where(calendar).FirstOrDefault();
 
             return resp;
