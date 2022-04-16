@@ -158,7 +158,7 @@ namespace Calendar.Controllers
         }
 
 
-        [HttpGet("GetCalendar")]
+        [HttpPost("GetCalendar")]
         public async Task<IActionResult> GetCalendar([FromBody]CalendarListRequestModel reqModel)
         {
             var respModel = new CalendarListRespModel();
